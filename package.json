@@ -7,18 +7,20 @@
     "chai": "^4.2.0",
     "gh-pages": "^2.0.1",
     "prettier": "^1.17.1",
+    "react-pinpoint": "0.0.1-beta.3",
     "react-scripts": "^3.0.1"
   },
   "dependencies": {
     "big.js": "^5.2.2",
     "github-fork-ribbon-css": "^0.2.1",
+    "puppeteer": "^5.2.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
+    "test": "node ./src/__tests__/index.js",
     "eject": "react-scripts eject",
     "deploy": "gh-pages -d build"
   },
