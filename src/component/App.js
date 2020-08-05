@@ -12,7 +12,9 @@ export default class App extends React.Component {
   };
 
   handleClick = buttonName => {
-    this.setState(calculate(this.state, buttonName));
+    for (let i = 0; i < 99999; i++) {
+      this.setState(calculate(this.state, buttonName));
+    } // testing to make react slow
   };
 
   render() {

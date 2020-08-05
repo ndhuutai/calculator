@@ -1,42 +1,46 @@
 const puppeteer = require('puppeteer');
 const reactPinpoint = require('react-pinpoint');
+const path = require('path');
 
 
 (async () => {
     const browser = await puppeteer.launch({ headless: false });
-
     const page = await browser.newPage();
     await page.goto('http://localhost:3000/');
 
-    const thing = await page.$eval("#root", thing => console.log(thing))
-    console.log(thing)
+    // exposing react-pinpoint function to puppeteer browser context
+    await page.exposeFunction('random', () => reactPinpoint.random());
 
-    // await page.waitForSelector("#root")
+    // calling the exposed function in puppeteer browser
+    await page.evaluate(() => {
+        console.log('random', random().then(result=>console.log(result)))
+    })
 
-    // const thing = await page.evaluate((thing) => console.log(thing))
-    // console.log(thing)
+    /* testing adding react-pinpoint via a script tag
+    await page.addScriptTag({
+        path: path.join(__dirname, '../../node_modules/react-pinpoint/src/index.js')
+    })
+    await page.evaluate(() => {
+        const root = document.querySelector('#root');
+        mountToReactRoot(root);
+    });
+    await page.click('#yeah9')
+    await page.click('#yeah9')
+    await page.click('#yeah9')
+    await page.evaluate(() => {
+        console.log('changes->', changes);
+    })
+    */
 
-    // const thing = await page.evaluate('document.getElementById("root")')
-    // console.log(thing)
-
-    // const container = await page.$("#root")
-    // console.log(container)
-    // const thing = await container.getProperty("_reactRootContainer")
-
-    // console.log(thing)
-    // container.evaluate(node => console.log(node))
-
-    // reactPinpoint.mountToReactRoot(container)
-    
-    // await page.click('#yeah9')
-    // await page.click('#yeah9')
-    // await page.click('#yeah9')
-    // await page.click('#yeah9')
-    // await page.click('#yeah9')
-
-    // console.log(await page.content());
-    // await page.screenshot({path: 'screenshot.png'});
-    
+    /* tracing using chrome dev tools
+    await page.tracing.start({path: 'trace.json'});
+    await page.goto('http://localhost:3000');
+    await page.click('#yeah9')
+    await page.click('#yeah9')
+    await page.click('#yeah9')
+    await page.click('#yeah9')
+    await page.click('#yeah9')
+    await page.tracing.stop();
     await browser.close();
-    
+    */
 })()
