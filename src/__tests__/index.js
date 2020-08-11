@@ -1,8 +1,10 @@
+console.log('yeah, this is the mvp!!');
+
 const puppeteer = require('puppeteer');
 const path = require('path');
 
 (async () => {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
 
     // Set an empty object on devtools hook so react will record fibers
@@ -10,6 +12,8 @@ const path = require('path');
     await page.evaluateOnNewDocument(() => window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {})
 
     await page.goto('http://localhost:3000/');
+
+    console.log('we in boys');
 
     // testing adding react-pinpoint via a script tag
     await page.addScriptTag({
