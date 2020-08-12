@@ -23,11 +23,14 @@ jobs:
     - uses: actions/checkout@v2
 
     # Runs a single command using the runners shell
-    - name: React Pinpoint
-      run: docker-compose up -d --build
+    - name: React Pinpoint Build
+      run: docker-compose up --build
+    
+    - name: React Pinpoint Run 
+      run: docker-compose up
 
-#     # Runs a set of commands using the runners shell
-#     - name: Run a multi-line script
-#       run: |
-#         echo Add other actions to build,
-#         echo test, and deploy your project.
+    # # Runs a set of commands using the runners shell
+    # - name: Run a multi-line script
+    #   run: |
+    #     echo Add other actions to build,
+    #     echo test, and deploy your project.
