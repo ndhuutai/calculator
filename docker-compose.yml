@@ -12,6 +12,7 @@ services:
       context: .
       dockerfile: Dockerfile.calculator
     command: "npm start"
-    tty: true
     expose:
       - "3000"
+    depends_on: 
+      - tests
