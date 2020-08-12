@@ -24,10 +24,10 @@ jobs:
 
     # Runs a single command using the runners shell
     - name: React Pinpoint Build
-      run: docker-compose up --build
+      run: docker-compose up --abort-on-container-exit
     
-    - name: React Pinpoint Run 
-      run: docker-compose up
+    # - name: React Pinpoint Run 
+    #   run: docker-compose up
 
     # # Runs a set of commands using the runners shell
     # - name: Run a multi-line script
