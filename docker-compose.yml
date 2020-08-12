@@ -5,6 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
     command: "wait-for-it.sh web:3000 -- npm test"
+    depends_on: 
+      - web
   web:
     build:
       context: .
@@ -12,5 +14,3 @@ services:
     command: "npm start"
     expose:
       - "3000"
-    depends_on: 
-      - tests
