@@ -13,5 +13,5 @@ services:
       dockerfile: Dockerfile.calculator
     command: "npm start"
     tty: true
-    ports:
-      - 3000:3000
+    expose:
+      - "3000"
