@@ -53,5 +53,5 @@ const path = require("path");
     await page.tracing.stop();
     */
    await browser.close();
-   process.exit();
+   process.exit(1);
 })();
