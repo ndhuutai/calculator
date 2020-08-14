@@ -66,8 +66,8 @@ function traverseWith(fiber, callback) {
  *
  * @param {number} threshold The rendering time to filter for.
  */
-function getAllSlowComponentRenders(threshold, changesArray) {
-  const slowRenders = changesArray
+function getAllSlowComponentRenders(threshold) {
+  const slowRenders = changes
     .map(flattenTree) // Flatten tree
     .flat() // Flatten 2d array into 1d array
     .filter((fiber) => checkTime(fiber, threshold)) // filter out all that don't meet threshold

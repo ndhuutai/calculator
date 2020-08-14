@@ -1,26 +1,43 @@
+const path = require("path")
 
+async function recordTest(page, url, rootIdString) {
+    // Mock devtools hook so react will record fibers
+    // Must exist before react runs
+    await page.evaluateOnNewDocument(
+        () => {
+            window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {}
+        }
+    );
+    
+    // Load url and inject code to page
+    await page.goto(url);
+    await page.addScriptTag({
+        path: path.join(__dirname, "utils.js"),
+    });
 
-
-async function setup() {
-    // Add react devtools
-    // Create global state
-}
-
-
-async function recordTest() {
-    // Add react root listener
+    
     // Start recording changes
-    // Create local state
+    await page.evaluate((rootIdString) => {
+        const root = document.querySelector(rootIdString);
+        mountToReactRoot(root);
+      }, rootIdString);
+
+    return page
 }
 
 
-async function reportTestResults() {
+async function reportTestResults(page, threshold = 0) {
     // Return results of local state that exceeds threshold
-    // Default threshold of 16 is used
-    // Add any exceeded to global state
+    const slowRenders = await page.evaluate(async (threshold) => {
+        return getAllSlowComponentRenders(threshold);
+      }, threshold);
+
+    return slowRenders
 }
 
 
 async function reportAllTestResults() {
     // Return global state
 }
+
+module.exports = {recordTest, reportTestResults, reportAllTestResults}
