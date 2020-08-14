@@ -1,40 +1,73 @@
-console.log("yeah, this is the mvp!!");
-
 const puppeteer = require("puppeteer");
-const reactPinpoint = require('./react-pinpoint');
+const reactPinpoint = require('../react-pinpoint');
+
+let browser, page
 
 
-(async () => {
-  const browser = await puppeteer.launch({
+beforeEach(async () => {
+  browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
+  page = await browser.newPage();
 
-  const page = await browser.newPage();
+  // If tests need different root or url then we need to put this inside the tests
   const url = "http://localhost:3000/calculator"
-  await reactPinpoint.recordTest(page, url, "#root")
+  const rootId = "#root"
+  await reactPinpoint.recordTest(page, url, rootId)
+})
 
 
-  await page.click("#yeah9");
-  await page.click("#yeah9");
-  await page.click("#yeah9");
 
+afterEach(async () => {
   const slowRenders = await reactPinpoint.reportTestResults(page)
+  // console.log("YEAH->", slowRenders);
+  await browser.close();
+})
 
-  console.log("YEAH->", slowRenders);
 
-  /* tracing using chrome dev tools
-    await page.tracing.start({path: 'trace.json'});
-    await page.goto('http://localhost:3000');
-    await page.click('#yeah9')
-    await page.click('#yeah9')
-    await page.click('#yeah9')
-    await page.click('#yeah9')
-    await page.click('#yeah9')
-    await page.tracing.stop();
-    */
-  //  await browser.close();
 
-   // Returns response code base on how many slow renders
-  //  process.exit(slowRenders.length);
-})();
+test("999 displays", async () => {
+  await page.click("#yeah9");
+  await page.click("#yeah9");
+  await page.click("#yeah9");
+
+  const value = await page.evaluate(() => {
+    const element = document.querySelector(".component-display>div")
+    return element.textContent
+  })
+
+  expect(value).toBe("999")
+})
+
+
+test("666 displays", async () => {
+  await page.click("#yeah6");
+  await page.click("#yeah6");
+  await page.click("#yeah6");
+
+  const value = await page.evaluate(() => {
+    const element = document.querySelector(".component-display>div")
+    return element.textContent
+  })
+
+  expect(value).toBe("666")
+})
+
+
+
+test("Test add", async () => {
+  await page.click("#yeah9");
+  await page.click("#yeah\\+");
+  await page.click("#yeah9");
+  await page.click("#yeah\\=");
+
+  const value = await page.evaluate(() => {
+    const element = document.querySelector(".component-display>div")
+    return element.textContent
+  })
+
+  expect(value).toBe("18")
+
+})
+
 

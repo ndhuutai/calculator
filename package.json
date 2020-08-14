@@ -4,8 +4,8 @@
   "license": "MIT",
   "homepage": "http://ahfarmer.github.io/calculator",
   "devDependencies": {
-    "chai": "^4.2.0",
     "gh-pages": "^2.0.1",
+    "jest": "^26.4.0",
     "prettier": "^1.17.1",
     "react-pinpoint": "0.0.1-beta.3",
     "react-scripts": "^3.0.1"
@@ -20,7 +20,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "node ./src/__tests__/index.js",
+    "test": "jest",
     "eject": "react-scripts eject",
     "deploy": "gh-pages -d build"
   },
