@@ -3,10 +3,8 @@ console.log("yeah, this is the mvp!!");
 const puppeteer = require("puppeteer");
 const path = require("path");
 
-(async () => {
-  const browser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+const generatePage = async (browser, url) => {
+
   const page = await browser.newPage();
 
   // Set an empty object on devtools hook so react will record fibers
@@ -14,21 +12,41 @@ const path = require("path");
   await page.evaluateOnNewDocument(
     () => (window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {}),
   );
-  console.log("got here though");
 
-  await page.goto("http://web:3000/calculator");
-
-  console.log("we in boys");
+  // await page.goto("http://web:3000/calculator");
+  await page.goto(url);
 
   // testing adding react-pinpoint via a script tag
   await page.addScriptTag({
     path: path.join(__dirname, "utils.js"),
   });
 
+  return page
+}
+
+
+const listenToRoot = async (id) => {
   await page.evaluate(() => {
-    const root = document.querySelector("#root");
+    const root = document.querySelector(id);
     mountToReactRoot(root);
   });
+}
+
+
+
+(async () => {
+  const browser = await puppeteer.launch({
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  beforeEach() {
+    const page = await generatePage(browser, "http://web:3000/calculator")
+    await listenToRoot("#root")
+  }
+
+
+
+
 
   await page.click("#yeah9");
   await page.click("#yeah9");
@@ -53,5 +71,8 @@ const path = require("path");
     await page.tracing.stop();
     */
    await browser.close();
-   process.exit(1);
+
+   // Returns response code base on how many slow renders
+   process.exit(slowRenders.length);
 })();
+

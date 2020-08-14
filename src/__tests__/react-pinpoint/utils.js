@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable consistent-return */
+
 let changes = [];
 
 function recordChangesToObjField(obj, field) {
