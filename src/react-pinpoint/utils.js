@@ -123,10 +123,18 @@ class Tree {
     let uniquePart = undefined;
 
     // unique part of a fiber node depends on its type.
-    if (fiberNode.tag === 0) {
+    if (
+      fiberNode.tag === 0 ||
+      fiberNode.tag === 10 ||
+      fiberNode.tag === 11 ||
+      fiberNode.tag === 9 ||
+      fiberNode.tag === 15
+    ) {
       uniquePart = fiberNode.elementType;
     } else if (fiberNode.tag === 3) {
       uniquePart = fiberNode.memoizedState.element.type;
+    } else if (fiberNode.tag === 7) {
+      uniquePart = fiberNode;
     } else {
       uniquePart = fiberNode.stateNode;
     }
@@ -185,10 +193,17 @@ class Tree {
   processSiblingNode(fiberNode, previousTreeNode) {
     let uniquePart = undefined;
     let id = undefined;
-    if (fiberNode.tag === 0) {
+    if (
+      fiberNode.tag === 0 ||
+      fiberNode.tag === 10 ||
+      fiberNode.tag === 11 ||
+      fiberNode.tag === 9
+    ) {
       uniquePart = fiberNode.elementType;
     } else if (fiberNode.tag === 3) {
       uniquePart = fiberNode.memoizedState.element.type;
+    } else if (fiberNode.tag === 7) {
+      uniquePart = fiberNode;
     } else {
       uniquePart = fiberNode.stateNode;
     }
