@@ -18,6 +18,7 @@ class TreeNode {
     this.memoizedState = memoizedState;
     this.effectTag = effectTag;
     this.ref = ref;
+    this.fiberName = getElementName(fiberNode);
     this.updateQueue = updateQueue; // seems to be replaced entirely and since it exists directly under a fiber node, it can't be modified.
     this.tag = tag;
     this.updateList = [];
@@ -85,6 +86,21 @@ class TreeNode {
 
   addParent(node) {
     // if (!node) return;
+  }
+}
+
+function getElementName(fiber) {
+  switch (fiber.tag) {
+    case 1:
+      return fiber.elementType.name;
+    case 3:
+      return "Host Root - The element you used to render the React App";
+    case 5:
+      return `${fiber.elementType}${
+        fiber.elementType.className ? `.${fiber.elementType.className}` : ""
+      }`;
+    default:
+      return `${fiber.elementType}`;
   }
 }
 

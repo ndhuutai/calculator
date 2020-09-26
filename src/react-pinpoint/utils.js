@@ -3,11 +3,11 @@
 
 // const Tree = require("./tree");
 
-let changes = [];
-const processedFibers = new WeakMap();
-const fiberMap = new Map();
-const testWeakSet = new WeakSet();
-const stateNodeWeakSet = new WeakSet();
+var changes = [];
+var processedFibers = new WeakMap();
+var fiberMap = new Map();
+var testWeakSet = new WeakSet();
+var stateNodeWeakSet = new WeakSet();
 
 class TreeNode {
   constructor(fiberNode, uID) {
@@ -29,6 +29,7 @@ class TreeNode {
     this.memoizedState = memoizedState;
     this.effectTag = effectTag;
     this.ref = ref;
+    this.fiberName = getElementName(fiberNode);
     this.updateQueue = updateQueue; // seems to be replaced entirely and since it exists directly under a fiber node, it can't be modified.
     this.tag = tag;
     this.updateList = [];
@@ -103,8 +104,8 @@ class Tree {
   // uniqueId is used to identify a fiber to then help with counting re-renders
   // componentList
   constructor(rootNode, FiberMap, ProcessedFibers) {
-    // fiberMap = FiberMap;
-    // processedFibers = ProcessedFibers;
+    fiberMap = FiberMap;
+    processedFibers = ProcessedFibers;
     this.uniqueId = fiberMap.size;
     this.componentList = [];
     this.effectList = [];
@@ -226,13 +227,37 @@ class Tree {
 
 function mountToReactRoot(reactRoot) {
   // Reset changes
-  let changes = [];
+  changes = [];
+
+  function getSet(obj, propName) {
+    const newPropName = `_${propName}`;
+    obj[newPropName] = obj[propName];
+    Object.defineProperty(obj, propName, {
+      get() {
+        return this[newPropName];
+      },
+      set(newVal) {
+        this[newPropName] = newVal;
+        console.log(`${obj} ${propName}`, this[newPropName]);
+        changes.push(new Tree(this[newPropName], fiberMap, processedFibers));
+
+        console.log("CHANGES", changes);
+        // console.log("Fiber STORE: ", processedFibers);
+        // console.log("testweakset after", testWeakSet);
+        // console.log("statenodeweakset", stateNodeWeakSet);
+        // console.log("fiber map:", fiberMap);
+        // getTotalRenderCount();
+        // whatChanged();
+      },
+    });
+  }
 
   // Lift parent of react fibers tree
   const parent = reactRoot._reactRootContainer._internalRoot;
 
   console.log("ROOT FIBER", parent.current);
   changes.push(new Tree(parent.current, fiberMap, processedFibers));
+
   // after initial
   // console.log("Initial processed fibers", processedFibers);
   console.log("initial fiberMap", fiberMap);
@@ -242,29 +267,6 @@ function mountToReactRoot(reactRoot) {
   // Reassign react fibers tree to record initial state
   // parent.current = current;
   return changes;
-}
-
-function getSet(obj, propName) {
-  const newPropName = `_${propName}`;
-  obj[newPropName] = obj[propName];
-  Object.defineProperty(obj, propName, {
-    get() {
-      return this[newPropName];
-    },
-    set(newVal) {
-      this[newPropName] = newVal;
-      console.log(`${obj} ${propName}`, this[newPropName]);
-      changes.push(new Tree(this[newPropName], fiberMap, processedFibers));
-
-      console.log("CHANGES", changes);
-      // console.log("Fiber STORE: ", processedFibers);
-      // console.log("testweakset after", testWeakSet);
-      // console.log("statenodeweakset", stateNodeWeakSet);
-      // console.log("fiber map:", fiberMap);
-      // getTotalRenderCount();
-      // whatChanged();
-    },
-  });
 }
 
 /**
@@ -288,7 +290,9 @@ function getAllSlowComponentRenders(threshold) {
     });
   });
 
-  console.log("slow renders in here", slowRenders);
+  slowRenders = slowRenders.map(commit => {
+    return commit.filter(component => component.selfBaseDuration >= threshold);
+  });
 
   return slowRenders;
 }
@@ -392,4 +396,19 @@ function getChangedKeys(previous, next) {
   return changedKeys;
 }
 
-module.exports = { mountToReactRoot, getAllSlowComponentRenders };
+function getElementName(fiber) {
+  switch (fiber.tag) {
+    case 1:
+      return fiber.elementType.name;
+    case 3:
+      return "Host Root - The element you used to render the React App";
+    case 5:
+      return `${fiber.elementType}${
+        fiber.elementType.className ? `.${fiber.elementType.className}` : ""
+      }`;
+    default:
+      return `${fiber.elementType}`;
+  }
+}
+
+// module.exports = { mountToReactRoot, getAllSlowComponentRenders };

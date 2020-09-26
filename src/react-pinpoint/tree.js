@@ -1,7 +1,7 @@
-const TreeNode = require("./treeNode");
+// const TreeNode = require("./treeNode");
 
-let fiberMap = undefined;
-let processedFibers = undefined;
+// let fiberMap = undefined;
+// let processedFibers = undefined;
 
 class Tree {
   // uniqueId is used to identify a fiber to then help with counting re-renders

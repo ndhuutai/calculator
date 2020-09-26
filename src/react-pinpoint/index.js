@@ -1,6 +1,6 @@
 const path = require("path");
 // const { getAllSlowComponentRenders } = require("./utils");
-const { mountToReactRoot } = require("./utils");
+// const { mountToReactRoot } = require("./utils");
 
 async function recordTest(page, url, rootIdString) {
   // Mock devtools hook so react will record fibers
@@ -10,16 +10,20 @@ async function recordTest(page, url, rootIdString) {
   });
 
   // Load url and inject code to page
-  console.log("GOT HERE");
   await page.goto(url);
   await page.addScriptTag({
     path: path.join(__dirname, "./utils.js"),
+  });
+  await page.addScriptTag({
+    path: path.join(__dirname, "./tree.js"),
+  });
+  await page.addScriptTag({
+    path: path.join(__dirname, "./treeNode.js"),
   });
 
   // Start recording changes
   await page.evaluate(rootIdString => {
     const root = document.querySelector(rootIdString);
-    console.log("got here too though");
     mountToReactRoot(root);
   }, rootIdString);
 
@@ -31,8 +35,6 @@ async function reportTestResults(page, threshold = 0) {
   const slowRenders = await page.evaluate(async threshold => {
     return getAllSlowComponentRenders(threshold);
   }, threshold);
-
-  console.log("ALL SLOW RENDERS HERE", slowRenders);
 
   return slowRenders;
 }
