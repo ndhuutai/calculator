@@ -32,7 +32,7 @@ test("999 displays", async () => {
   //   const element = document.querySelector(".component-display>div");
   //   return element.textContent;
   // });
-  const slowRenders = await reactPinpoint.reportTestResults(page, 1);
+  const slowRenders = await reactPinpoint.reportTestResults(page, 0.1);
   console.log(slowRenders);
   // expect(value).toBe("999");
 });

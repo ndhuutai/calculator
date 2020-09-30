@@ -33,6 +33,7 @@ class TreeNode {
     this.updateQueue = updateQueue; // seems to be replaced entirely and since it exists directly under a fiber node, it can't be modified.
     this.tag = tag;
     this.updateList = [];
+    this.children = [];
 
     // stateNode can contain circular references depends on the fiber node
     if (tag === 5) {
@@ -95,8 +96,41 @@ class TreeNode {
     this.sibling = treeNode;
   }
 
-  addParent(node) {
+  addParent(treeNode) {
     // if (!node) return;
+    this.parent = treeNode;
+  }
+
+  toSerializable() {
+    let newObj = {};
+    let omitList = [
+      "memoizedProps",
+      "memoizedState",
+      "updateList",
+      "updateQueue",
+      "ref",
+      "elementType",
+      "stateNode",
+    ];
+    // transform each nested node to just ids where appropriate
+    for (let key in this) {
+      if (omitList.indexOf(key) < 0) {
+        switch (key) {
+          case "parent":
+          case "sibling":
+          case "child":
+            newObj[`${key}ID`] = this[key].uID;
+            break;
+          case "children":
+            newObj[`childrenIDs`] = this[key].map(treeNode => treeNode.uID);
+            break;
+          default:
+            newObj[key] = this[key];
+        }
+      }
+    }
+
+    return newObj;
   }
 }
 
@@ -163,34 +197,28 @@ class Tree {
     // create a new TreeNode
     if (fiberNode.tag === 3) {
       this.root = new TreeNode(fiberNode, id);
-      // this.root = new TreeNode(fiberNode, this.uniqueId);
-      this.componentList.push({ ...this.root }); // push a copy
-      // this.uniqueId++;
+      this.componentList.push(this.root); // push a copy
 
       if (fiberNode.child) {
-        // const newNode = new TreeNode(fiberNode.child, this.uniqueId);
-        // this.root.addChild(newNode);
-        // this.componentList.push(newNode);
-        // this.uniqueId++;
         this.processNode(fiberNode.child, this.root);
       }
     } else {
       const newNode = new TreeNode(fiberNode, id);
-      // const newNode = new TreeNode(fiberNode, this.uniqueId);
+      newNode.addParent(previousTreeNode);
+      previousTreeNode.children.push(newNode);
       previousTreeNode.addChild(newNode);
-      this.componentList.push({ ...newNode });
-      // this.uniqueId++;
+      this.componentList.push(newNode);
 
       if (fiberNode.child) {
         this.processNode(fiberNode.child, newNode);
       }
       if (fiberNode.sibling) {
-        this.processSiblingNode(fiberNode.sibling, newNode);
+        this.processSiblingNode(fiberNode.sibling, newNode, previousTreeNode);
       }
     }
   }
 
-  processSiblingNode(fiberNode, previousTreeNode) {
+  processSiblingNode(fiberNode, previousTreeNode, parentTreeNode) {
     let uniquePart = undefined;
     let id = undefined;
     if (
@@ -213,29 +241,22 @@ class Tree {
       id = this.uniqueId;
       this.uniqueId++;
       fiberMap.set(id, fiberNode);
-      // if (fiberNode.tag === 0) {
-      //   processedFibers.set(fiberNode.elementType, id);
-      // } else if (fiberNode.tag === 3) {
-      //   processedFibers.set(fiberNode.memoizedState.element.type, id);
-      // } else {
-      //   processedFibers.set(fiberNode.stateNode, id);
-      // }
       processedFibers.set(uniquePart, id);
     } else {
       id = processedFibers.get(uniquePart);
     }
 
     const newNode = new TreeNode(fiberNode, id);
-    // const newNode = new TreeNode(fiberNode, this.uniqueId);
+    newNode.addParent(parentTreeNode);
+    parentTreeNode.children.push(newNode);
     previousTreeNode.addSibling(newNode);
-    this.componentList.push({ ...newNode });
-    // this.uniqueId++;
+    this.componentList.push(newNode);
 
     if (fiberNode.child) {
       this.processNode(fiberNode.child, newNode);
     }
     if (fiberNode.sibling) {
-      this.processSiblingNode(fiberNode.sibling, newNode);
+      this.processSiblingNode(fiberNode.sibling, newNode, parentTreeNode);
     }
   }
 }
@@ -284,32 +305,30 @@ function mountToReactRoot(reactRoot) {
   return changes;
 }
 
+function scrubCircularReferences(changes) {
+  // loop through the different commits
+  // for every commit check the componentList
+  // scrub the circular references and leave the flat one there
+
+  let scrubChanges = changes.map(commit => {
+    return commit.componentList.map(component => {
+      return component.toSerializable();
+    });
+  });
+  return scrubChanges;
+}
+
 /**
  *
  * @param {number} threshold The rendering time to filter for.
  */
 function getAllSlowComponentRenders(threshold) {
-  let slowRenders = changes.map(commit => {
-    return commit.componentList.map(component => {
-      delete component.memoizedProps;
-      delete component.memoizedState;
-      delete component.updateList;
-      delete component.updateQueue;
-      delete component.ref;
-      delete component.elementType;
-      delete component.stateNode;
+  // referencing "changes" in the global scope
+  let scrubChanges = scrubCircularReferences(changes);
 
-      return {
-        ...component,
-      };
-    });
-  });
-
-  slowRenders = slowRenders.map(commit => {
+  return scrubChanges.map(commit => {
     return commit.filter(component => component.selfBaseDuration >= threshold);
   });
-
-  return slowRenders;
 }
 
 // function checkTime(fiber, threshold) {
