@@ -12,16 +12,11 @@ async function recordTest(page, url, rootIdString) {
   // Load url and inject code to page
   await page.goto(url);
   await page.addScriptTag({
-    path: path.join(__dirname, "./utils.js"),
-  });
-  await page.addScriptTag({
-    path: path.join(__dirname, "./tree.js"),
-  });
-  await page.addScriptTag({
-    path: path.join(__dirname, "./treeNode.js"),
+    path: path.join(__dirname, "./lib/bundle.es5.js"),
   });
 
   // Start recording changes
+  // adding "changes" to the execution context
   await page.evaluate(rootIdString => {
     const root = document.querySelector(rootIdString);
     mountToReactRoot(root);
@@ -33,10 +28,11 @@ async function recordTest(page, url, rootIdString) {
 async function reportTestResults(page, threshold = 0) {
   // Return results of local state that exceeds threshold
   const slowRenders = await page.evaluate(async threshold => {
-    return getAllSlowComponentRenders(threshold);
+    const result = getAllSlowComponentRenders(changes, threshold);
+    return JSON.stringify(result);
   }, threshold);
 
-  return slowRenders;
+  return JSON.parse(slowRenders);
 }
 
 async function reportAllTestResults() {

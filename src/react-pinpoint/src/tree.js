@@ -1,8 +1,7 @@
 // const TreeNode = require("./treeNode");
-
+import TreeNode from "./treeNode.js";
 // let fiberMap = undefined;
 // let processedFibers = undefined;
-
 class Tree {
   // uniqueId is used to identify a fiber to then help with counting re-renders
   // componentList
@@ -26,10 +25,18 @@ class Tree {
     let uniquePart = undefined;
 
     // unique part of a fiber node depends on its type.
-    if (fiberNode.tag === 0) {
+    if (
+      fiberNode.tag === 0 ||
+      fiberNode.tag === 10 ||
+      fiberNode.tag === 11 ||
+      fiberNode.tag === 9 ||
+      fiberNode.tag === 15
+    ) {
       uniquePart = fiberNode.elementType;
     } else if (fiberNode.tag === 3) {
       uniquePart = fiberNode.memoizedState.element.type;
+    } else if (fiberNode.tag === 7) {
+      uniquePart = fiberNode;
     } else {
       uniquePart = fiberNode.stateNode;
     }
@@ -58,40 +65,41 @@ class Tree {
     // create a new TreeNode
     if (fiberNode.tag === 3) {
       this.root = new TreeNode(fiberNode, id);
-      // this.root = new TreeNode(fiberNode, this.uniqueId);
-      this.componentList.push({ ...this.root }); // push a copy
-      // this.uniqueId++;
+      this.componentList.push(this.root); // push a copy
 
       if (fiberNode.child) {
-        // const newNode = new TreeNode(fiberNode.child, this.uniqueId);
-        // this.root.addChild(newNode);
-        // this.componentList.push(newNode);
-        // this.uniqueId++;
         this.processNode(fiberNode.child, this.root);
       }
     } else {
       const newNode = new TreeNode(fiberNode, id);
-      // const newNode = new TreeNode(fiberNode, this.uniqueId);
+      newNode.addParent(previousTreeNode);
+      previousTreeNode.children.push(newNode);
       previousTreeNode.addChild(newNode);
-      this.componentList.push({ ...newNode });
-      // this.uniqueId++;
+      this.componentList.push(newNode);
 
       if (fiberNode.child) {
         this.processNode(fiberNode.child, newNode);
       }
       if (fiberNode.sibling) {
-        this.processSiblingNode(fiberNode.sibling, newNode);
+        this.processSiblingNode(fiberNode.sibling, newNode, previousTreeNode);
       }
     }
   }
 
-  processSiblingNode(fiberNode, previousTreeNode) {
+  processSiblingNode(fiberNode, previousTreeNode, parentTreeNode) {
     let uniquePart = undefined;
     let id = undefined;
-    if (fiberNode.tag === 0) {
+    if (
+      fiberNode.tag === 0 ||
+      fiberNode.tag === 10 ||
+      fiberNode.tag === 11 ||
+      fiberNode.tag === 9
+    ) {
       uniquePart = fiberNode.elementType;
     } else if (fiberNode.tag === 3) {
       uniquePart = fiberNode.memoizedState.element.type;
+    } else if (fiberNode.tag === 7) {
+      uniquePart = fiberNode;
     } else {
       uniquePart = fiberNode.stateNode;
     }
@@ -101,33 +109,52 @@ class Tree {
       id = this.uniqueId;
       this.uniqueId++;
       fiberMap.set(id, fiberNode);
-      // if (fiberNode.tag === 0) {
-      //   processedFibers.set(fiberNode.elementType, id);
-      // } else if (fiberNode.tag === 3) {
-      //   processedFibers.set(fiberNode.memoizedState.element.type, id);
-      // } else {
-      //   processedFibers.set(fiberNode.stateNode, id);
-      // }
       processedFibers.set(uniquePart, id);
     } else {
       id = processedFibers.get(uniquePart);
     }
 
     const newNode = new TreeNode(fiberNode, id);
-    // const newNode = new TreeNode(fiberNode, this.uniqueId);
+    newNode.addParent(parentTreeNode);
+    parentTreeNode.children.push(newNode);
     previousTreeNode.addSibling(newNode);
-    this.componentList.push({ ...newNode });
-    // this.uniqueId++;
+    this.componentList.push(newNode);
 
     if (fiberNode.child) {
       this.processNode(fiberNode.child, newNode);
     }
     if (fiberNode.sibling) {
-      this.processSiblingNode(fiberNode.sibling, newNode);
+      this.processSiblingNode(fiberNode.sibling, newNode, parentTreeNode);
     }
+  }
+
+  getRendersOfComponent(name, serialize = false) {
+    let componentList = this.componentList.filter(
+      item => item.fiberName === name,
+    );
+
+    if (serialize) {
+      componentList = componentList.map(item => item.toSerializable());
+    }
+    return {
+      ...this,
+      componentList,
+    };
+  }
+
+  // stretch feature, possible todo but needs extensive testing.
+  setStateOfRender() {
+    this.componentList.forEach(component => {
+      if (component.tag === 1 && component.memoizedState) {
+        console.log(component.stateNode);
+        component.stateNode.setState({ ...component.memoizedState });
+      }
+    });
   }
 }
 
-module.exports = Tree;
+// module.exports = Tree;
+
+export default Tree;
 
 // root -> App(1) -> Component2 (2)
